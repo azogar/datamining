@@ -1,0 +1,12 @@
+@relation DataSet
+
+@attribute attribute0 numeric
+@attribute attribute1 numeric
+@attribute attribute2 numeric
+
+@data
+0.390609,0.994216,0.575332
+0.591902,0.70991,0.998033
+0.130006,0.902077,0.615833
+0.126173,0.027937,0.374422
+0.617409,0.335385,0.35169
