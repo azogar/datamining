@@ -12,7 +12,11 @@ public class Cell {
 	private int out;
 	
 	public Cell() {
-		this(new Point(), 0, 0);
+		this(new Point());
+	}
+	
+	public Cell(Point point) {
+		this(point, 0, 0);
 	}
 	
 	public Cell(Point point, int in, int out) {
@@ -44,5 +48,13 @@ public class Cell {
 
 	public void setOut(int out) {
 		this.out = out;
+	}
+	
+	public void incrIn() {
+		this.in++;
+	}
+	
+	public void incrOut() {
+		this.out++;
 	}
 }
