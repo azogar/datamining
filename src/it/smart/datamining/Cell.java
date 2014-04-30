@@ -60,6 +60,6 @@ public class Cell {
 	
 	@Override
 	public String toString() {
-		return String.valueOf(point);
+		return "\n" + String.valueOf(point) + " IN: " + this.in + " OUT: " + this.out;
 	}
 }
