@@ -57,4 +57,9 @@ public class Cell {
 	public void incrOut() {
 		this.out++;
 	}
+	
+	@Override
+	public String toString() {
+		return String.valueOf(point);
+	}
 }

@@ -13,11 +13,11 @@ public class Grid {
 	private int weight;
 	private Vector<Cell> cells;
 	
-	public static Grid create(long minLatitude, long maxLatitude, long minLongitude, long maxLongitude, int height, int weight) {
+	public static Grid create(double minLatitude, double maxLatitude, double minLongitude, double maxLongitude, int height, int weight) {
 		Grid grid = new Grid(height, weight);
 		
-		for (long longitude = minLongitude; longitude < maxLongitude; longitude += height)
-			for (long latitude = minLatitude; latitude < maxLatitude; latitude += weight)
+		for (double longitude = minLongitude; longitude < maxLongitude; longitude += height)
+			for (double latitude = minLatitude; latitude < maxLatitude; latitude += weight)
 				grid.getCells().add(new Cell(new Point(latitude, longitude)));
 
 		return grid;
@@ -60,6 +60,11 @@ public class Grid {
 
 	public void setCells(Vector<Cell> cells) {
 		this.cells = cells;
+	}
+	
+	@Override
+	public String toString() {
+		return "Height: " + this.height + "\nWeight: " + this.weight + "\nCells:\n" + String.valueOf(this.cells);
 	}
 	
 	public Cell getCell(long latitude, long longitude) {
