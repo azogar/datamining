@@ -2,18 +2,21 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Heatmaps</title>
+    <title>GPS points</title>
     <style>
       html, body, #map-canvas {
         height: 100%;
         margin: 0px;
         padding: 0px
       }
-      #panel {
+      #absoluteContainer {
         position: absolute;
-        top: 5px;
         left: 50%;
-        margin-left: -180px;
+      }
+      #panel {
+        position: relative;
+        top: 5px;
+        left: -50%;
         z-index: 5;
         background-color: #fff;
         padding: 5px;
@@ -23,223 +26,51 @@
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=visualization"></script>
     <script>
 // Adding Data Points
-var map, pointarray, heatmap, fileReader;
+var map, layer;
 
-// This will parse a delimited string into an array of
-// arrays. The default delimiter is the comma, but this
-// can be overriden in the second argument.
-function CSVToArray( strData, strDelimiter ){
-  // Check to see if the delimiter is defined. If not,
-  // then default to comma.
-  strDelimiter = (strDelimiter || ",");
-
-  // Create a regular expression to parse the CSV values.
-  var objPattern = new RegExp(
-    (
-      // Delimiters.
-      "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-
-      // Quoted fields.
-      "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-
-      // Standard fields.
-      "([^\"\\" + strDelimiter + "\\r\\n]*))"
-    ),
-    "gi"
-    );
-
-
-  // Create an array to hold our data. Give the array
-  // a default empty first row.
-  var arrData = [[]];
-
-  // Create an array to hold our individual pattern
-  // matching groups.
-  var arrMatches = null;
-
-
-  // Keep looping over the regular expression matches
-  // until we can no longer find a match.
-  while (arrMatches = objPattern.exec( strData )){
-
-    // Get the delimiter that was found.
-    var strMatchedDelimiter = arrMatches[ 1 ];
-
-    // Check to see if the given delimiter has a length
-    // (is not the start of string) and if it matches
-    // field delimiter. If id does not, then we know
-    // that this delimiter is a row delimiter.
-    if (
-      strMatchedDelimiter.length &&
-      (strMatchedDelimiter != strDelimiter)
-      ){
-
-      // Since we have reached a new row of data,
-      // add an empty row to our data array.
-      arrData.push( [] );
-
-    }
-
-
-    // Now that we have our delimiter out of the way,
-    // let's check to see which kind of value we
-    // captured (quoted or unquoted).
-    if (arrMatches[ 2 ]){
-
-      // We found a quoted value. When we capture
-      // this value, unescape any double quotes.
-      var strMatchedValue = arrMatches[ 2 ].replace(
-        new RegExp( "\"\"", "g" ),
-        "\""
-        );
-
-    } else {
-
-      // We found a non-quoted value.
-      var strMatchedValue = arrMatches[ 3 ];
-
-    }
-
-
-    // Now that we have our value string, let's add
-    // it to the data array.
-    arrData[ arrData.length - 1 ].push( strMatchedValue );
-  }
-
-  // Return the parsed data.
-  return( arrData );
-}
-
-function createMap(fileText) {
-  var taxiData = [];
-
-  var gpsRecords = CSVToArray(fileText);
-  for (var i = 1; i < gpsRecords.length - 1; i++) {
-    taxiData.push(new google.maps.LatLng(gpsRecords[i][1], gpsRecords[i][2]));
-  };
+function initialize() {
 
   var mapOptions = {
-    mapTypeId: google.maps.MapTypeId.SATELLITE
+    center: new google.maps.LatLng(32.40388462573844, 177.6342757875001),
+    zoom: 3,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
   };
 
-  var map = new google.maps.Map(document.getElementById('map-canvas'),
+  map = new google.maps.Map(document.getElementById('map-canvas'),
       mapOptions);
 
-  var latlngbounds = new google.maps.LatLngBounds();
-  for (var i = 0; i < taxiData.length; i++) {
-    latlngbounds.extend(taxiData[i]);
-    var marker = new google.maps.Marker({
-      position: taxiData[i],
-      map: map,
-      icon: {
-        url: "http://maps.gpsvisualizer.com/google_maps/icons/blankcircle/red.png",
-        scaledSize: new google.maps.Size(5, 5)
-      }
-    });
-  }
-  map.fitBounds(latlngbounds);
-
-  var pointArray = new google.maps.MVCArray(taxiData);
-
-  heatmap = new google.maps.visualization.HeatmapLayer({
-    data: pointArray
+  // fusion table
+  layer = new google.maps.FusionTablesLayer({
+    map: map,
+    heatmap: { enabled: false },
+    query: {
+      select: "col1",
+      from: "1RN_YBb1Smi1Zc-4CKd7RtsA_QN2QO_C_vbDzfNAV",
+      where: ""
+    }
   });
 
-  heatmap.setMap(map);
 }
 
-/**
- * Check for the various File API support.
- */
-function checkFileAPI() {
-  if (window.File && window.FileReader && window.FileList && window.Blob) {
-    fileReader = new FileReader();
-    return true; 
-  } else {
-    alert('The File APIs are not fully supported by your browser. Fallback required.');
-    return false;
-  }
+function activateHeatmap() {
+  layer.setOptions({heatmap: {enabled: true}}); 
 }
 
-/**
- * read text input
- */
-function readText(filePath) {
-  var output = ""; //placeholder for text output
-  if(filePath.files && filePath.files[0]) {           
-    fileReader.onload = function (e) {
-      output = e.target.result;
-      createMap(output);
-    };//end onload()
-    fileReader.readAsText(filePath.files[0]);
-  }//end if html5 filelist support
-  else if(ActiveXObject && filePath) { //fallback to IE 6-8 support via ActiveX
-    try {
-      fileReader = new ActiveXObject("Scripting.FileSystemObject");
-      var file = fileReader.OpenTextFile(filePath, 1); //ActiveX File Object
-      output = file.ReadAll(); //text contents of file
-      file.Close(); //close file "input stream"
-      createMap(output);
-    } catch (e) {
-      if (e.number == -2146827859) {
-        alert('Unable to access local files due to browser security settings. ' + 
-         'To overcome this, go to Tools->Internet Options->Security->Custom Level. ' + 
-         'Find the setting for "Initialize and script ActiveX controls not marked as safe" and change it to "Enable" or "Prompt"'); 
-      }
-    }
-  }
-  else { //this is where you could fallback to Java Applet, Flash or similar
-    return false;
-  }
-  return true;
+function disableHeatmap() {
+  layer.setOptions({heatmap: {enabled: false}}); 
 }
 
-function toggleHeatmap() {
-  heatmap.setMap(heatmap.getMap() ? null : map);
-}
-
-function changeGradient() {
-  var gradient = [
-    'rgba(0, 255, 255, 0)',
-    'rgba(0, 255, 255, 1)',
-    'rgba(0, 191, 255, 1)',
-    'rgba(0, 127, 255, 1)',
-    'rgba(0, 63, 255, 1)',
-    'rgba(0, 0, 255, 1)',
-    'rgba(0, 0, 223, 1)',
-    'rgba(0, 0, 191, 1)',
-    'rgba(0, 0, 159, 1)',
-    'rgba(0, 0, 127, 1)',
-    'rgba(63, 0, 91, 1)',
-    'rgba(127, 0, 63, 1)',
-    'rgba(191, 0, 31, 1)',
-    'rgba(255, 0, 0, 1)'
-  ]
-  heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
-}
-
-function changeRadius() {
-  heatmap.set('radius', heatmap.get('radius') ? null : 20);
-}
-
-function changeOpacity() {
-  heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
-}
-
-//google.maps.event.addDomListener(window, 'load', initialize);
+google.maps.event.addDomListener(window, 'load', initialize);
 
     </script>
   </head>
 
-  <body onload="checkFileAPI();">
-    <div id="fileSelection">
-      <input type="file" onchange='readText(this)' />
-    </div>
-    <div id="panel">
-      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
-      <button onclick="changeGradient()">Change gradient</button>
-      <button onclick="changeRadius()">Change radius</button>
-      <button onclick="changeOpacity()">Change opacity</button>
+  <body>
+    <div id="absoluteContainer">
+      <div id="panel">
+        <button onclick="activateHeatmap()">Activate Heatmap</button>
+        <button onclick="disableHeatmap()">Disable Heatmap</button>
+      </div>
     </div>
     <div id="map-canvas"></div>
   </body>
