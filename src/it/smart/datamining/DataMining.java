@@ -9,7 +9,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import weka.clusterers.ClusterEvaluation;
+import weka.clusterers.HierarchicalClusterer;
+import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
+import weka.core.converters.ConverterUtils.DataSource;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Remove;
 
 
 /**
@@ -112,10 +118,10 @@ public class DataMining {
 		grid.addGrid(createGrid(0.001f, 0.001f, "data/pechino_starttime_filtered_3.csv", "data/pechino_endtime_filtered_3.csv"));
 		grid.addGrid(createGrid(0.001f, 0.001f, "data/pechino_starttime_filtered_4.csv", "data/pechino_endtime_filtered_4.csv"));
 			
-		grid.removeCellsLess(1);
+		grid.removeCellsLess(2);
 		
 		try {
-			grid.saveArffFile("data/weka.arff");
+			grid.saveArffFile("data/weka2.arff");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
