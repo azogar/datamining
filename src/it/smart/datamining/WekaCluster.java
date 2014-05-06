@@ -3,12 +3,10 @@ package it.smart.datamining;
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Attribute;
+import weka.core.CosineDistance;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Remove;
 
 public class WekaCluster {
 
