@@ -17,16 +17,19 @@ import weka.core.converters.ArffSaver;
  *
  */
 public class Grid {
-	private double height;
-	private double width;
+	private float height;
+	private float width;
 	private Vector<Cell> cells;
 	
-	public static Grid create(double minLatitude, double maxLatitude, double minLongitude, double maxLongitude, double height, double width) {
-		Grid grid = new Grid(height, width);
+	public static Grid create(float minLatitude, float maxLatitude, float minLongitude, float maxLongitude, float height, float width) {
+		int size = (Math.round((maxLatitude - minLatitude) / width) + 1) * (Math.round((maxLongitude - minLongitude) / height) + 1);
+		Grid grid = new Grid(height, width, new Vector<Cell>(size));
 		
-		for (double longitude = minLongitude; longitude < maxLongitude; longitude += height)
-			for (double latitude = minLatitude; latitude < maxLatitude; latitude += width)
+		int i = 0;
+		for (float longitude = minLongitude; longitude < maxLongitude; longitude += height)
+			for (float latitude = minLatitude; latitude < maxLatitude; latitude += width) {
 				grid.getCells().add(new Cell(new Point(latitude, longitude)));
+			}
 
 		return grid;
 	}
@@ -35,30 +38,30 @@ public class Grid {
 		this(0, 0);
 	}
 	
-	public Grid(double height, double width) {
+	public Grid(float height, float width) {
 		this(height, width, new Vector<Cell>());
 	}
 	
-	public Grid(double height, double width, Vector<Cell> cells) {
+	public Grid(float height, float width, Vector<Cell> cells) {
 		super();
 		this.height = height;
 		this.width = width;
 		this.cells = cells;
 	}
 
-	public double getHeight() {
+	public float getHeight() {
 		return height;
 	}
 
-	public void setHeight(double height) {
+	public void setHeight(float height) {
 		this.height = height;
 	}
 
-	public double getwidth() {
+	public float getwidth() {
 		return width;
 	}
 
-	public void setwidth(double width) {
+	public void setwidth(float width) {
 		this.width = width;
 	}
 
@@ -75,7 +78,7 @@ public class Grid {
 		return "Height: " + this.height + "\nwidth: " + this.width + "\nCells:\n" + String.valueOf(this.cells);
 	}
 	
-	public Cell getCell(double latitude, double longitude) {
+	public Cell getCell(float latitude, float longitude) {
 		for (Cell cell : this.cells) {
 			if ((latitude >= cell.getPoint().getLatitude()) && (latitude < cell.getPoint().getLatitude() + this.width) && (longitude >= cell.getPoint().getLongitude()) && (longitude < cell.getPoint().getLongitude() + this.height))
 				return cell;
@@ -84,12 +87,14 @@ public class Grid {
 	}
 	
 	public void removeCellsLess(int threshold) {
-		int i = 0;
-		while (i < this.cells.size()) {
-			if (this.cells.get(i).getIn() + this.cells.get(i).getOut() <= threshold) {
+		for (int i = this.cells.size() - 1; i >= 0; i--) {
+			int sum = 0;
+			for (String day : Cell.days) {
+				sum += Cell.check(this.cells.get(i).getIn(), day) + Cell.check(this.cells.get(i).getOut(), day);
+			}
+		
+			if (sum <= threshold) {
 				this.cells.remove(i);
-			} else {
-				i++;
 			}
 		}
 	}
@@ -99,23 +104,50 @@ public class Grid {
 	}
 	
 	public void saveArffFile(String filename) throws IOException {
+	    ArffSaver saver = new ArffSaver();
+	    saver.setInstances(this.getInstances());
+	    saver.setFile(new File(filename));
+	    saver.writeBatch();
+	}
+	
+	public Instances getInstances() {
 		FastVector schema = new FastVector();
 		schema.addElement(new Attribute("cell_id"));
 		schema.addElement(new Attribute("latitude"));
 		schema.addElement(new Attribute("longitude"));
-		schema.addElement(new Attribute("in"));
-		schema.addElement(new Attribute("out"));
+		for (String day : Cell.days) {
+			schema.addElement(new Attribute("in-" + day));
+			schema.addElement(new Attribute("out-" + day));
+		}
+		schema.addElement(new Attribute("tot-in"));
+		schema.addElement(new Attribute("tot-out"));
+		schema.addElement(new Attribute("tot"));
 		
 	    Instances data = new Instances("DataSet", schema, 0);
 	    for (Cell cell : this.cells) {
-	    	double [] values = {this.cells.indexOf(cell), cell.getPoint().getLatitude(), cell.getPoint().getLongitude(), cell.getIn(), cell.getOut()};	    
-	    	data.add(new Instance(1.0, values));
-	    }
+	    	int i = 0, totin = 0, totout = 0;
+	    	double [] values = new double[schema.size()];
+	    	values[i++] = this.cells.indexOf(cell);
+	    	values[i++] = cell.getPoint().getLatitude();
+	    	values[i++] = cell.getPoint().getLongitude();
+			for (String day : Cell.days) {
+				values[i++] = Cell.check(cell.getIn(), day);
+				values[i++] = Cell.check(cell.getOut(), day);
+				totin += totin += values[i - 2];
+				totout += totin += values[i - 1];
+			}
+	    	values[i++] = totin;
+	    	values[i++] = totout;
+	    	values[i++] = totin + totout;
 	    
-	    ArffSaver saver = new ArffSaver();
-	    saver.setInstances(data);
-	    saver.setFile(new File(filename));
-	    saver.writeBatch();
+	    	data.add(new Instance(1.0, values));
+	    }		
+	    
+	    return data;
+	}
+	
+	public void addGrid(Grid grid) {
+		this.cells.addAll(grid.getCells());
 	}
 	
 }

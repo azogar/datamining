@@ -3,6 +3,13 @@ package it.smart.datamining;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import weka.core.Instances;
 
 
 /**
@@ -13,11 +20,11 @@ import java.io.IOException;
  */
 public class DataMining {
 	
-	public static Grid createGrid(double height, double width, String filename_in, String filename_out) {
-		double minLatitude = Double.MAX_VALUE;
-		double maxLatitude = Double.MIN_VALUE;
-		double minLongitude = Double.MAX_VALUE;
-		double maxLongitude = Double.MIN_VALUE;
+	public static Grid createGrid(float height, float width, String filename_in, String filename_out) {
+		float minLatitude = Float.MAX_VALUE;
+		float maxLatitude = Float.MIN_VALUE;
+		float minLongitude = Float.MAX_VALUE;
+		float maxLongitude = Float.MIN_VALUE;
 		
 		try {	
 			String [] filenames = {filename_in, filename_out};
@@ -27,15 +34,15 @@ public class DataMining {
 				String line = reader.readLine();
 				while ((line = reader.readLine()) != null) {
 					String [] attributes = line.split(",");
-					double latitude = Double.parseDouble(attributes[1]);
-					double longitude = Double.parseDouble(attributes[2]);
+					float latitude = Float.parseFloat(attributes[1]);
+					float longitude = Float.parseFloat(attributes[2]);
 					
 					minLatitude = Math.min(minLatitude, latitude);
 					maxLatitude = Math.max(maxLatitude, latitude);
 					minLongitude = Math.min(minLongitude, longitude);
 					maxLongitude = Math.max(maxLongitude, longitude);	
 					
-					System.out.println(latitude + " " + longitude);
+					// System.out.println(latitude + " " + longitude);
 				}
 				reader.close();
 			}
@@ -49,7 +56,9 @@ public class DataMining {
 		System.out.println("MAX lon " + maxLongitude);
 		
 		Grid grid = Grid.create(minLatitude, maxLatitude, minLongitude, maxLongitude, height, width);
-			
+
+		grid = setInOut(grid, filename_in, filename_out);
+
 		return grid;
 	}
 	
@@ -57,21 +66,31 @@ public class DataMining {
 		
 		try {	
 			String [] filenames = {filename_in, filename_out};
+			DateFormat originalformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+			DateFormat format = new SimpleDateFormat("EEE", Locale.ENGLISH);
+			
 			
 			for (String filename : filenames) {
 				boolean in = (filename.compareTo(filename_in) == 0);
 				BufferedReader reader = new BufferedReader(new FileReader(filename));
 				String line = reader.readLine();
+
 				while ((line = reader.readLine()) != null) {
 					String [] attributes = line.split(",");
-					double latitude = Double.parseDouble(attributes[1]);
-					double longitude = Double.parseDouble(attributes[2]);
-					
-					if (in)
-						grid.getCell(latitude, longitude).incrIn();
-					else
-						grid.getCell(latitude, longitude).incrOut();
-					
+					float latitude = Float.parseFloat(attributes[1]);
+					float longitude = Float.parseFloat(attributes[2]);
+				
+					try {
+						Date date = originalformat.parse(attributes[4] + " 00:00:00");
+		
+						if (in)
+							grid.getCell(latitude, longitude).incrIn(format.format(date));
+						else
+							grid.getCell(latitude, longitude).incrOut(format.format(date));
+									
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}					
 				}
 				reader.close();
 			}
@@ -79,6 +98,8 @@ public class DataMining {
 			e.printStackTrace();
 		}
 	
+		System.out.println(grid.getCells().size());
+		
 		grid.removeEmptyCells();
 		
 		return grid;
@@ -86,16 +107,18 @@ public class DataMining {
 	
 	
 	public static void main(String [] args) {
-		Grid grid = createGrid(0.01, 0.01, "data/pechino_starttime.csv", "data/pechino_endtime.csv");
-		grid = setInOut(grid, "data/pechino_starttime.csv", "data/pechino_endtime.csv");
-	//	System.out.println(String.valueOf(grid));
-	
+		Grid grid = createGrid(0.001f, 0.001f, "data/pechino_starttime_filtered.csv", "data/pechino_endtime_filtered.csv");
+		grid.addGrid(createGrid(0.001f, 0.001f, "data/pechino_starttime_filtered_2.csv", "data/pechino_endtime_filtered_2.csv"));
+		grid.addGrid(createGrid(0.001f, 0.001f, "data/pechino_starttime_filtered_3.csv", "data/pechino_endtime_filtered_3.csv"));
+		grid.addGrid(createGrid(0.001f, 0.001f, "data/pechino_starttime_filtered_4.csv", "data/pechino_endtime_filtered_4.csv"));
+			
+		grid.removeCellsLess(1);
+		
 		try {
 			grid.saveArffFile("data/weka.arff");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		
 		System.out.println(String.valueOf(grid));
 		System.out.println(grid.getCells().size());

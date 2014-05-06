@@ -7,14 +7,14 @@ package it.smart.datamining;
  *
  */
 public class Point {
-	private double latitude;
-	private double longitude;
+	private float latitude;
+	private float longitude;
 	
 	public Point() {
 		this(0, 0);
 	}
 	
-	public Point(double latitude, double longitude) {
+	public Point(float latitude, float longitude) {
 		super();
 		this.latitude = latitude;
 		this.longitude = longitude;
@@ -24,15 +24,15 @@ public class Point {
 		return latitude;
 	}
 
-	public void setLatitude(double latitude) {
+	public void setLatitude(float latitude) {
 		this.latitude = latitude;
 	}
 
-	public double getLongitude() {
+	public float getLongitude() {
 		return longitude;
 	}
 
-	public void setLongitude(double longitude) {
+	public void setLongitude(float longitude) {
 		this.longitude = longitude;
 	}
 	
