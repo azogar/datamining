@@ -86,7 +86,7 @@ public class DataMining {
 		    System.err.println("Not enough input files!");
 		    System.exit(1);
 		}
-		Grid grid = createGrid(0.001f, 0.001f, inOutFiles[0].trim(), inOutFiles[1].trim(), format);
+		Grid grid = createGrid(0.001f, 0.001f, inOutFiles[0], inOutFiles[1], format);
 			
 		//grid.removeCellsLess(2);
 		
