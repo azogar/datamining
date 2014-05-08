@@ -9,14 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import weka.clusterers.ClusterEvaluation;
-import weka.clusterers.HierarchicalClusterer;
-import weka.clusterers.SimpleKMeans;
-import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Remove;
-
 
 /**
  * Classe principale del progetto.
@@ -33,16 +25,28 @@ public class DataMining {
 			String [] filenames = {filename_in, filename_out};
 			DateFormat originalformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 			
-			
 			for (String filename : filenames) {
 				boolean in = (filename.compareTo(filename_in) == 0);
 				BufferedReader reader = new BufferedReader(new FileReader(filename));
 				String line = reader.readLine();
+				String[] attributeNames = line.split(",");
+				
+				int latitudeIdx = -1, longitudeIdx = -1, gpstime = -1;
+				for (int i = 0; i < attributeNames.length; i++) {
+				    if(attributeNames[i].matches("lat|latitude")) latitudeIdx = i;
+				    else if(attributeNames[i].matches("long|longitude")) longitudeIdx = i;
+				    else if(attributeNames[i].matches("gpsdate")) gpstime = i;
+				}
+				
+				if(latitudeIdx == -1 || longitudeIdx == -1 || gpstime == -1) {
+				    System.err.println("Latitude, Longitude or GPS time not found!");
+				    System.exit(1);
+				}
 
 				while ((line = reader.readLine()) != null) {
 					String [] attributes = line.split(",");
-					float latitude = Float.parseFloat(attributes[1]);
-					float longitude = Float.parseFloat(attributes[2]);
+					float latitude = Float.parseFloat(attributes[latitudeIdx]);
+					float longitude = Float.parseFloat(attributes[longitudeIdx]);
 				
 					try {
 						Date date = originalformat.parse(attributes[4] + " 00:00:00");
@@ -79,7 +83,7 @@ public class DataMining {
 		//grid.removeCellsLess(2);
 		
 		try {
-			grid.saveArffFile("data/weka3.arff");
+			grid.saveArffFile("data/weka.arff");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

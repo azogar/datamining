@@ -1,6 +1,5 @@
 package weka.core;
 
-import weka.core.*;
 import weka.core.TechnicalInformation.Field;
 import weka.core.TechnicalInformation.Type;
 import weka.core.neighboursearch.PerformanceStats;
