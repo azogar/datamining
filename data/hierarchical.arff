@@ -1,4 +1,4 @@
-@relation 'DataSet-weka.filters.unsupervised.attribute.Remove-R1,2,3,4,5,334,335,336-weka.filters.unsupervised.attribute.AddCluster-Wweka.clusterers.SimpleKMeans -N 3 -A \"weka.core.CosineDistance -R first-last\" -I 500 -S 10'
+@relation 'DataSet-weka.filters.unsupervised.attribute.Remove-R1,2,3,4,5,334,335,336-weka.filters.unsupervised.attribute.AddCluster-Wweka.clusterers.SimpleKMeans -N 3 -A \"weka.core.EuclideanDistance -R first-last\" -I 500 -S 10'
 
 @attribute in-2008-10-01 numeric
 @attribute out-2008-10-01 numeric

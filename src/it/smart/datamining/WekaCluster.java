@@ -50,13 +50,13 @@ public class WekaCluster {
 	    SimpleKMeans clustererSimpleKMeans = new SimpleKMeans();
 
 	    // Setting clusterer's options
-	    // No idea why it considers one less cluster from what it is specified with CosineDistance
-	    // I need to call setNumClusters() again after buildClusterer()
-	    clustererSimpleKMeans.setNumClusters(numClusters+1);
+	    clustererSimpleKMeans.setNumClusters(numClusters);
 	    clustererSimpleKMeans.setDistanceFunction(distance);
+	    // Initialization k-means++ (instead of random) to avoid empty centroids
+	    // Otherwise, bug with number of clusters considered!
+	    clustererSimpleKMeans.setOptions(new String[] {"-init", "1"});
 
 	    clustererSimpleKMeans.buildClusterer(data);
-	    clustererSimpleKMeans.setNumClusters(numClusters+1); // called again for a bug
 	    
 	    // Create .arff file with assigned clusters as classes
 	    AddCluster addCluster = new AddCluster();
