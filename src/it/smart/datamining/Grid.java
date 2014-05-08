@@ -2,6 +2,8 @@ package it.smart.datamining;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import weka.core.Attribute;
@@ -17,36 +19,31 @@ import weka.core.converters.ArffSaver;
  *
  */
 public class Grid {
-	private float height;
 	private float width;
+	private float height;
 	private Vector<Cell> cells;
-	
-	public static Grid create(float minLatitude, float maxLatitude, float minLongitude, float maxLongitude, float height, float width) {
-		int size = (Math.round((maxLatitude - minLatitude) / width) + 1) * (Math.round((maxLongitude - minLongitude) / height) + 1);
-		Grid grid = new Grid(height, width, new Vector<Cell>(size));
 		
-		int i = 0;
-		for (float longitude = minLongitude; longitude < maxLongitude; longitude += height)
-			for (float latitude = minLatitude; latitude < maxLatitude; latitude += width) {
-				grid.getCells().add(new Cell(new Point(latitude, longitude)));
-			}
-
-		return grid;
-	}
-	
 	public Grid() {
 		this(0, 0);
 	}
 	
-	public Grid(float height, float width) {
-		this(height, width, new Vector<Cell>());
+	public Grid(float width, float height) {
+		this(width, height, new Vector<Cell>());
+	}
+
+	public Grid(float width, float height, Vector<Cell> cells) {
+		super();
+		this.width = width;
+		this.height = height;
+		this.cells = cells;
 	}
 	
-	public Grid(float height, float width, Vector<Cell> cells) {
-		super();
-		this.height = height;
+	public float getWidth() {
+		return width;
+	}
+
+	public void setWidth(float width) {
 		this.width = width;
-		this.cells = cells;
 	}
 
 	public float getHeight() {
@@ -57,14 +54,6 @@ public class Grid {
 		this.height = height;
 	}
 
-	public float getwidth() {
-		return width;
-	}
-
-	public void setwidth(float width) {
-		this.width = width;
-	}
-
 	public Vector<Cell> getCells() {
 		return cells;
 	}
@@ -72,7 +61,7 @@ public class Grid {
 	public void setCells(Vector<Cell> cells) {
 		this.cells = cells;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Height: " + this.height + "\nwidth: " + this.width + "\nCells:\n" + String.valueOf(this.cells);
@@ -83,13 +72,19 @@ public class Grid {
 			if ((latitude >= cell.getPoint().getLatitude()) && (latitude < cell.getPoint().getLatitude() + this.width) && (longitude >= cell.getPoint().getLongitude()) && (longitude < cell.getPoint().getLongitude() + this.height))
 				return cell;
 		}
-		return null;
+		return createCell(latitude, longitude);
+	}
+	
+	private Cell createCell(float latitude, float longitude) {
+		Cell cell = new Cell(new Point(Math.round((latitude / this.width) - 0.5) * this.width, Math.round((longitude / this.height) - 0.5) * this.height));
+		this.cells.add(cell);
+		return cell;
 	}
 	
 	public void removeCellsLess(int threshold) {
 		for (int i = this.cells.size() - 1; i >= 0; i--) {
 			int sum = 0;
-			for (String day : Cell.days) {
+			for (String day : this.getDays()) {
 				sum += Cell.check(this.cells.get(i).getIn(), day) + Cell.check(this.cells.get(i).getOut(), day);
 			}
 		
@@ -111,11 +106,15 @@ public class Grid {
 	}
 	
 	public Instances getInstances() {
+		Set<String> days = this.getDays();
+ 		
 		FastVector schema = new FastVector();
 		schema.addElement(new Attribute("cell_id"));
-		schema.addElement(new Attribute("latitude"));
-		schema.addElement(new Attribute("longitude"));
-		for (String day : Cell.days) {
+		schema.addElement(new Attribute("p1_latitude"));
+		schema.addElement(new Attribute("p1_longitude"));
+		schema.addElement(new Attribute("p2_latitude"));
+		schema.addElement(new Attribute("p2_longitude"));
+		for (String day : days) {
 			schema.addElement(new Attribute("in-" + day));
 			schema.addElement(new Attribute("out-" + day));
 		}
@@ -130,11 +129,13 @@ public class Grid {
 	    	values[i++] = this.cells.indexOf(cell);
 	    	values[i++] = cell.getPoint().getLatitude();
 	    	values[i++] = cell.getPoint().getLongitude();
-			for (String day : Cell.days) {
+	    	values[i++] = cell.getPoint().getLatitude() + this.width;
+	    	values[i++] = cell.getPoint().getLongitude() + this.height;
+			for (String day : days) {
 				values[i++] = Cell.check(cell.getIn(), day);
-				values[i++] = Cell.check(cell.getOut(), day);
-				totin += totin += values[i - 2];
-				totout += totin += values[i - 1];
+				totin += values[i - 1];
+				values[i++] = Cell.check(cell.getIn(), day);
+				totout += values[i - 1];
 			}
 	    	values[i++] = totin;
 	    	values[i++] = totout;
@@ -150,4 +151,12 @@ public class Grid {
 		this.cells.addAll(grid.getCells());
 	}
 	
+	public Set<String> getDays() {
+		Set<String> days = new HashSet<String>();
+		for (Cell cell : this.cells) {
+			days.addAll(cell.getIn().keySet());
+			days.addAll(cell.getOut().keySet());
+		}
+		return days;
+	}
 }

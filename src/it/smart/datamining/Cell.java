@@ -10,10 +10,8 @@ import java.util.HashMap;
  */
 public class Cell {
 	private Point point;
-	private HashMap<String, Integer> in; //TODO aggiungere gestione multipla del tempo
+	private HashMap<String, Integer> in;
 	private HashMap<String, Integer> out;
-	
-	public static final String [] days = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 
 	public static int check(HashMap<String, Integer> hashmap, String key) {
 		return (hashmap.get(key) != null)?hashmap.get(key):0;
@@ -24,10 +22,14 @@ public class Cell {
 	}
 	
 	public Cell(Point point) {
+		this(point, new HashMap<String, Integer>(),new HashMap<String, Integer>());
+	}
+	
+	public Cell(Point point, HashMap<String, Integer> in, HashMap<String, Integer> out) {
 		super();
 		this.point = point;
-		this.in = new HashMap<String, Integer>();
-		this.out = new HashMap<String, Integer>();
+		this.in = in;
+		this.out = out;
 	}
 	
 	public Point getPoint() {
