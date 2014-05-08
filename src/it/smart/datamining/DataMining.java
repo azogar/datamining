@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 
 
 /**
@@ -17,6 +18,8 @@ import java.util.Locale;
  *
  */
 public class DataMining {
+    
+    private static String CONFIG_FILE_NAME = "config-pre.txt"; 
 	
 	public static Grid createGrid(float width, float height, String filename_in, String filename_out, DateFormat format) {
 		Grid grid = new Grid(width, height);
@@ -75,15 +78,20 @@ public class DataMining {
 	
 	
 	public static void main(String [] args) {
-	//	DateFormat format = new SimpleDateFormat("EEE", Locale.ENGLISH);
-		DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+	    Map<String, String[]> options = ConfigUtil.getOptionValues(",", CONFIG_FILE_NAME);
+		DateFormat format = new SimpleDateFormat(options.get("timeDiscret")[0], Locale.ENGLISH);
 		
-		Grid grid = createGrid(0.001f, 0.001f, "data/pechino_starttime.csv", "data/pechino_endtime.csv", format);
+		String[] inOutFiles = options.get("inOutFiles");
+		if(inOutFiles.length != 2) {
+		    System.err.println("Not enough input files!");
+		    System.exit(1);
+		}
+		Grid grid = createGrid(0.001f, 0.001f, inOutFiles[0].trim(), inOutFiles[1].trim(), format);
 			
 		//grid.removeCellsLess(2);
 		
 		try {
-			grid.saveArffFile("data/weka.arff");
+			grid.saveArffFile(options.get("output")[0]);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

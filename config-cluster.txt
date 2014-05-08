@@ -1,0 +1,3 @@
+input = data/weka.arff
+numClusters = 3
+ignoredAttributes = cell_id, p1_latitude, p1_longitude, p2_latitude, p2_longitude, tot-in, tot-out, tot

@@ -1,5 +1,7 @@
 package it.smart.datamining;
 
+import java.util.Map;
+
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
@@ -10,21 +12,15 @@ import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
 
 public class WekaCluster {
+    
+    private static String CONFIG_FILE_NAME = "config-cluster.txt";
 
     public static void main(String[] args) {
 	try {
-	    final int numClusters = 3;
-	    final String inputFile = "data/weka.arff";
-	    final String[] ignoredAttributes = {
-		    "cell_id",
-		    "p1_latitude",
-		    "p1_longitude",
-		    "p2_latitude",
-		    "p2_longitude",
-		    "tot-in",
-		    "tot-out",
-		    "tot"
-	    };
+	    Map<String, String[]> options = ConfigUtil.getOptionValues(",", CONFIG_FILE_NAME);
+	    final int numClusters = Integer.parseInt(options.get("numClusters")[0]);
+	    final String inputFile = options.get("input")[0];
+	    final String[] ignoredAttributes = options.get("ignoredAttributes");
 
 	    // Read input dataset
 	    Instances data = DataSource.read(inputFile);
@@ -35,7 +31,7 @@ public class WekaCluster {
 	    // String representing the list of indexes of attributes to ignore
 	    StringBuilder removedIdx = new StringBuilder();
 	    for (int i = 0; i < ignoredAttributes.length; i++) {
-		removedIdx.append(data.attribute(ignoredAttributes[i]).index() + 1);
+		removedIdx.append(data.attribute(ignoredAttributes[i].trim()).index() + 1);
 		removedIdx.append(",");
 	    }
 	    removedIdx.setLength(removedIdx.length() - 1); // Remove last comma

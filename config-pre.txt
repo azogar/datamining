@@ -1,0 +1,3 @@
+timeDiscret = yyyy-MM-dd
+inOutFiles = data/pechino_starttime.csv, data/pechino_endtime.csv
+output = data/weka.arff
