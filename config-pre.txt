@@ -1,3 +1,8 @@
 timeDiscret = yyyy-MM-dd
+latitudeHeaderRegex = lat|latitude
+longitudeHeaderRegex = long|longitude
+dateHeaderRegex = gpsdate
 inOutFiles = data/pechino_starttime.csv, data/pechino_endtime.csv
 output = data/preprocess.arff
+cellWidth = 0.001d
+cellHeight = 0.001d

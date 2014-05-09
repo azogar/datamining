@@ -19,38 +19,40 @@ import weka.core.converters.ArffSaver;
  *
  */
 public class Grid {
-	private float width;
-	private float height;
+	private double width;
+	private double height;
+	private String dateFormat;
+	private int latIdx;
 	private Vector<Cell> cells;
 		
 	public Grid() {
 		this(0, 0);
 	}
 	
-	public Grid(float width, float height) {
+	public Grid(double width, double height) {
 		this(width, height, new Vector<Cell>());
 	}
 
-	public Grid(float width, float height, Vector<Cell> cells) {
+	public Grid(double width, double height, Vector<Cell> cells) {
 		super();
 		this.width = width;
 		this.height = height;
 		this.cells = cells;
 	}
 	
-	public float getWidth() {
+	public double getWidth() {
 		return width;
 	}
 
-	public void setWidth(float width) {
+	public void setWidth(double width) {
 		this.width = width;
 	}
 
-	public float getHeight() {
+	public double getHeight() {
 		return height;
 	}
 
-	public void setHeight(float height) {
+	public void setHeight(double height) {
 		this.height = height;
 	}
 
@@ -64,10 +66,10 @@ public class Grid {
 
 	@Override
 	public String toString() {
-		return "Height: " + this.height + "\nwidth: " + this.width + "\nCells:\n" + String.valueOf(this.cells);
+		return "Height: " + this.height + "\nWidth: " + this.width + "\nCells:\n" + String.valueOf(this.cells);
 	}
 	
-	public Cell getCell(float latitude, float longitude) {
+	public Cell getCell(double latitude, double longitude) {
 		for (Cell cell : this.cells) {
 			if ((latitude >= cell.getPoint().getLatitude()) && (latitude < cell.getPoint().getLatitude() + this.width) && (longitude >= cell.getPoint().getLongitude()) && (longitude < cell.getPoint().getLongitude() + this.height))
 				return cell;
@@ -75,7 +77,7 @@ public class Grid {
 		return createCell(latitude, longitude);
 	}
 	
-	private Cell createCell(float latitude, float longitude) {
+	private Cell createCell(double latitude, double longitude) {
 		Cell cell = new Cell(new Point(Math.round((latitude / this.width) - 0.5) * this.width, Math.round((longitude / this.height) - 0.5) * this.height));
 		this.cells.add(cell);
 		return cell;
