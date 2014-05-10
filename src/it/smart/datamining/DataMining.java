@@ -14,6 +14,8 @@ import weka.core.Instances;
 import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.instance.RemoveDuplicates;
+import weka.filters.unsupervised.instance.SubsetByExpression;
 
 
 /**
@@ -78,14 +80,32 @@ public class DataMining {
 	return instances;
 	}
     
-    public static void applyFilters(Instances[] instances, String[] headerRegex, int[] indexesToKeep) {
+    public static void applyFilters(Instances[] instances, String[] headerRegex, int[] indexesToKeep, Point[] regionCorners) {
+	// Duplicates need to be removed before removing not useful attributes
+	removeDuplicates(instances);
+	removeAttributes(instances, headerRegex, indexesToKeep);
+	cropRegion(instances, indexesToKeep, regionCorners);
+    }
+    
+    public static void removeDuplicates(Instances[] instances) {
 	try {
+	    RemoveDuplicates filter = null;
 	    for (int i = 0; i < instances.length; i++) {
-		
-		// TODO: remove duplicate instances
-
+		filter = new RemoveDuplicates();
+		filter.setInputFormat(instances[i]);
+		instances[i] = Filter.useFilter(instances[i], filter);
+	    }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+    }
+    
+    public static void removeAttributes(Instances[] instances, String[] headerRegex, int[] indexesToKeep) {
+	try {
+	    Remove filter = null;
+	    for (int i = 0; i < instances.length; i++) {
 		// Remove unwanted attributes
-		Remove filter = new Remove();
+		filter = new Remove();
 		filter.setInvertSelection(true);
 		filter.setAttributeIndicesArray(indexesToKeep);
 		filter.setInputFormat(instances[i]);
@@ -97,6 +117,28 @@ public class DataMining {
 		if (instances[0].attribute(j).name().matches(headerRegex[0])) indexesToKeep[0] = j;
 		else if (instances[0].attribute(j).name().matches(headerRegex[1])) indexesToKeep[1] = j;
 		else if (instances[0].attribute(j).name().matches(headerRegex[2])) indexesToKeep[2] = j;
+	    }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+    }
+    
+    public static void cropRegion(Instances[] instances, int[] indexes, Point[] corners) {
+	try {
+	    SubsetByExpression filter = null;
+	    int latIdx = indexes[0] + 1;
+	    int longIdx = indexes[1] + 1;
+	    String filterExpression = new String("(ATT" + latIdx + " >= "
+		    + corners[0].getLatitude() + ") and (ATT" + latIdx
+		    + " <= " + corners[1].getLatitude() + ") and (ATT"
+		    + longIdx + " >= " + corners[0].getLongitude()
+		    + ") and (ATT" + longIdx + " <= " + corners[1].getLongitude() + ")");
+	    
+	    for (int i = 0; i < instances.length; i++) {
+		filter = new SubsetByExpression();
+		filter.setExpression(filterExpression);
+		filter.setInputFormat(instances[i]);
+		instances[i] = Filter.useFilter(instances[i], filter);
 	    }
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -139,6 +181,7 @@ public class DataMining {
 	DateFormat format = new SimpleDateFormat(options.get("timeDiscret")[0], Locale.ENGLISH);
 	double[] cellSize = {Double.parseDouble(options.get("cellWidth")[0]), Double.parseDouble(options.get("cellHeight")[0])};
 	String[] headerRegex = new String[] {options.get("latitudeHeaderRegex")[0], options.get("longitudeHeaderRegex")[0], options.get("dateHeaderRegex")[0]};
+	String[] corners = options.get("regionCorners");
 	int[] indexes = new int[3];
 
 	String[] inOutFiles = options.get("inOutFiles");
@@ -149,7 +192,12 @@ public class DataMining {
 
 	Instances[] inputData = createInstances(cellSize, indexes, inOutFiles, headerRegex, format);
 	
-	applyFilters(inputData, headerRegex, indexes);
+	Point[] regionCorners = new Point[] {
+		new Point(Double.parseDouble(corners[0]), Double.parseDouble(corners[1])),
+		new Point(Double.parseDouble(corners[2]), Double.parseDouble(corners[3]))
+		};
+	
+	applyFilters(inputData, headerRegex, indexes, regionCorners);
 	
 	Grid grid = createGrid(cellSize, inputData, indexes, format);
 	
