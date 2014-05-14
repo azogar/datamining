@@ -13,7 +13,9 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Normalize;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.RemoveUseless;
 import weka.filters.unsupervised.instance.RemoveDuplicates;
 import weka.filters.unsupervised.instance.SubsetByExpression;
 
@@ -175,6 +177,31 @@ public class DataMining {
 
 	return grid;
     }
+    
+    public static Instances removeConstantFeatures(Instances instances) {
+	RemoveUseless filter = null;
+	try {
+	    filter = new RemoveUseless();
+	    filter.setInputFormat(instances);
+	    return Filter.useFilter(instances, filter);
+	} catch(Exception e) {
+	    e.printStackTrace();
+	}
+	return null;
+    }
+    
+    public static Instances normalize(Instances instances) {
+	Normalize filter = null;
+	try {
+	    filter = new Normalize();
+	    filter.setInputFormat(instances);
+	    return Filter.useFilter(instances, filter);
+	} catch(Exception e) {
+	    e.printStackTrace();
+	}
+	
+	return instances;
+    }
 	
     public static void main(String[] args) {
 	Map<String, String[]> options = ConfigUtil.getOptionValues(",", CONFIG_FILE_NAME);
@@ -201,12 +228,16 @@ public class DataMining {
 	
 	Grid grid = createGrid(cellSize, inputData, indexes, format);
 	
-	// TODO: normalize
+	Instances input = grid.getInstances();
+	
+	input = removeConstantFeatures(input);
+	input = normalize(input);
+	// TODO: normalization should NOT normalize longitude, latitude, cell_id 
 
 	// grid.removeCellsLess(2);
 
 	try {
-	    grid.saveArffFile(options.get("output")[0]);
+	    ConfigUtil.writeArff(input, options.get("outputArff")[0]);
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
@@ -214,5 +245,5 @@ public class DataMining {
 	System.out.println(String.valueOf(grid));
 	System.out.println("Number of cells: " + grid.getCells().size());
     }
-	
+
 }

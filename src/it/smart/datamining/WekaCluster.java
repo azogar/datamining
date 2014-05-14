@@ -5,17 +5,33 @@ import java.util.Map;
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
+import weka.core.Attribute;
 import weka.core.CosineDistance;
-import weka.core.DistanceFunction;
+import weka.core.EuclideanDistance;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.AddCluster;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.RenameAttribute;
 
 public class WekaCluster {
     
     private static String CONFIG_FILE_NAME = "config-cluster.txt";
+    
+    public static Instances renameAttribute(Instances instances, String attributeName, String newAttributeName) {
+	RenameAttribute filter = null;
+	try {
+	    filter = new RenameAttribute();
+	    filter.setFind(attributeName);
+	    filter.setReplace(newAttributeName);
+	    filter.setInputFormat(instances);
+	    instances = Filter.useFilter(instances, filter);	
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+	return instances;
+    }
 
     public static void main(String[] args) {
 	try {
@@ -26,6 +42,7 @@ public class WekaCluster {
 	    
 	    // Read input dataset
 	    Instances data = DataSource.read(inputFile);
+	    int numInstances = data.numInstances();
 
 	    // Filter to remove unwanted attributes from the dataset
 	    Remove filter = new Remove();
@@ -44,53 +61,96 @@ public class WekaCluster {
 	    data = Filter.useFilter(data, filter);
 
 	    // The distance function used is a Cosine Distance
-	    DistanceFunction distance = new CosineDistance();
+	    CosineDistance cosineDistance = new CosineDistance();
+	    EuclideanDistance euclideanDistance = new EuclideanDistance();
 	    
-	    // --- First Clusterer used: Simple K Means ---
-	    SimpleKMeans clustererSimpleKMeans = new SimpleKMeans();
+	    // --- First Clusterer used: Simple K Means with CosineDistance ---
+	    SimpleKMeans cosineSimpleKMeans = new SimpleKMeans();
 
 	    // Setting clusterer's options
-	    clustererSimpleKMeans.setNumClusters(numClusters);
-	    clustererSimpleKMeans.setDistanceFunction(distance);
-	    // Initialization k-means++ (instead of random) to avoid empty centroids
-	    // Otherwise, bug with number of clusters considered!
-	    clustererSimpleKMeans.setOptions(new String[] {"-init", "1"});
+	    cosineSimpleKMeans.setNumClusters(numClusters);
+	    cosineSimpleKMeans.setDistanceFunction(cosineDistance);
 
-	    clustererSimpleKMeans.buildClusterer(data);
+	    cosineSimpleKMeans.buildClusterer(data);
 	    
-	    // Create .arff file with assigned clusters as classes
-	    AddCluster addCluster = new AddCluster();
-	    addCluster.setInputFormat(data);
-	    addCluster.setClusterer(clustererSimpleKMeans);
-	    ConfigUtil.writeArff(Filter.useFilter(data, addCluster), options.get("arffSimpleKMeans")[0]);
+	    // --- Second Clusterer used: Simple K Means with EuclideanDistance ---
+	    SimpleKMeans euclideanSimpleKMeans = new SimpleKMeans();
+
+	    // Setting clusterer's options
+	    euclideanSimpleKMeans.setNumClusters(numClusters);
+	    euclideanSimpleKMeans.setDistanceFunction(euclideanDistance);
+
+	    euclideanSimpleKMeans.buildClusterer(data);
 	    
-	    // Evaluate Simple K Means clusterer
-	    ClusterEvaluation evalSimpleKMeans = new ClusterEvaluation();
-	    evalSimpleKMeans.setClusterer(clustererSimpleKMeans);
-	    evalSimpleKMeans.evaluateClusterer(data);
-	    System.out.println(evalSimpleKMeans.clusterResultsToString());
+	    // Evaluate SimpleKMeans with the two different distances
+	    ClusterEvaluation evalCosineSimpleKMeans = new ClusterEvaluation();
+	    evalCosineSimpleKMeans.setClusterer(cosineSimpleKMeans);
+	    evalCosineSimpleKMeans.evaluateClusterer(data);
+	    System.out.println(evalCosineSimpleKMeans.clusterResultsToString());
+	    
+	    System.out.println("#################################\n");
+	    
+	    ClusterEvaluation evalEuclideanSimpleKMeans = new ClusterEvaluation();
+	    evalEuclideanSimpleKMeans.setClusterer(euclideanSimpleKMeans);
+	    evalEuclideanSimpleKMeans.evaluateClusterer(data);
+	    System.out.println(evalEuclideanSimpleKMeans.clusterResultsToString());
 	    
 	    System.out.println("#################################\n");
 
-	    // --- Second Clusterer used: Hierarchical Clusterer ---
-	    HierarchicalClusterer clustererHierarchical = new HierarchicalClusterer();
+	    // --- Third Clusterer used: Hierarchical Clusterer with CosineDistance---
+	    HierarchicalClusterer cosineHierarchical = new HierarchicalClusterer();
 
 	    // Setting clusterer's options
-	    clustererHierarchical.setNumClusters(numClusters);
-	    clustererHierarchical.setDistanceFunction(distance);
+	    cosineHierarchical.setNumClusters(numClusters);
+	    cosineHierarchical.setDistanceFunction(cosineDistance);
 
-	    clustererHierarchical.buildClusterer(data);
+	    cosineHierarchical.buildClusterer(data);
 	    
-	    // Create .arff file with assigned clusters as classes
-	    addCluster.setClusterer(clustererHierarchical);
-	    ConfigUtil.writeArff(Filter.useFilter(data, addCluster), options.get("arffHierarchical")[0]);
+	    // --- Fourth Clusterer used: Hierarchical Clusterer with EuclideanDistance ---
+	    HierarchicalClusterer euclideanHierarchical = new HierarchicalClusterer();
 
-	    // Evaluate Hierarchical clusterer
-	    ClusterEvaluation evalHierarchical = new ClusterEvaluation();
-	    evalHierarchical.setClusterer(clustererHierarchical);
-	    evalHierarchical.evaluateClusterer(data);
-	    System.out.println(evalHierarchical.clusterResultsToString());
+	    // Setting clusterer's options
+	    euclideanHierarchical.setNumClusters(numClusters);
+	    euclideanHierarchical.setDistanceFunction(euclideanDistance);
 
+	    euclideanHierarchical.buildClusterer(data);
+	    
+	    // Evaluate Hierarchical clusterer with the two different instances
+	    ClusterEvaluation evalCosineHierarchical = new ClusterEvaluation();
+	    evalCosineHierarchical.setClusterer(cosineHierarchical);
+	    evalCosineHierarchical.evaluateClusterer(data);
+	    System.out.println(evalCosineHierarchical.clusterResultsToString());
+	    
+	    System.out.println("#################################\n");
+	    
+	    ClusterEvaluation evalEuclideanHierarchical = new ClusterEvaluation();
+	    evalEuclideanHierarchical.setClusterer(euclideanHierarchical);
+	    evalEuclideanHierarchical.evaluateClusterer(data);
+	    System.out.println(evalEuclideanHierarchical.clusterResultsToString());
+	    
+	    System.out.println("#################################\n");
+	    
+	    // Create Instances with assigned clusters, for each clusterer
+	    Instances clusteredInstances = new Instances(data);
+	    double[] cosineSimpleKMeansAssignments = evalCosineSimpleKMeans.getClusterAssignments();
+	    double[] euclideanSimpleKMeansAssignments = evalEuclideanSimpleKMeans.getClusterAssignments();
+	    double[] cosineHierarchicalAssignments = evalCosineHierarchical.getClusterAssignments();
+	    double[] euclideanHierarchicalAssignments = evalEuclideanHierarchical.getClusterAssignments();
+	    clusteredInstances.insertAttributeAt(new Attribute("cosineSimpleKMeans"), 0);
+	    clusteredInstances.insertAttributeAt(new Attribute("euclideanSimpleKMeans"), 1);
+	    clusteredInstances.insertAttributeAt(new Attribute("cosineHierarchical"), 2);
+	    clusteredInstances.insertAttributeAt(new Attribute("euclideanHierarchical"), 3);
+	    for(int i = 0; i < numInstances; i++) {
+		Instance currentInstance = clusteredInstances.instance(i);
+		currentInstance.setValue(0, cosineSimpleKMeansAssignments[i]);
+		currentInstance.setValue(1, euclideanSimpleKMeansAssignments[i]);
+		currentInstance.setValue(2, cosineHierarchicalAssignments[i]);
+		currentInstance.setValue(3, euclideanHierarchicalAssignments[i]);
+	    }
+
+	    ConfigUtil.writeArff(clusteredInstances, options.get("outputArff")[0]);
+	    ConfigUtil.writeCSV(clusteredInstances, options.get("outputCSV")[0]);
+	    
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

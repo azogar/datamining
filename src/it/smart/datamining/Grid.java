@@ -1,7 +1,5 @@
 package it.smart.datamining;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -10,7 +8,6 @@ import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ArffSaver;
 
 /**
  * Classe per gestire la griglia.
@@ -21,8 +18,6 @@ import weka.core.converters.ArffSaver;
 public class Grid {
 	private double width;
 	private double height;
-	private String dateFormat;
-	private int latIdx;
 	private Vector<Cell> cells;
 		
 	public Grid() {
@@ -100,13 +95,6 @@ public class Grid {
 		this.removeCellsLess(0);
 	}
 	
-	public void saveArffFile(String filename) throws IOException {
-	    ArffSaver saver = new ArffSaver();
-	    saver.setInstances(this.getInstances());
-	    saver.setFile(new File(filename));
-	    saver.writeBatch();
-	}
-	
 	public Instances getInstances() {
 		Set<String> days = this.getDays();
  		
@@ -136,7 +124,7 @@ public class Grid {
 			for (String day : days) {
 				values[i++] = Cell.check(cell.getIn(), day);
 				totin += values[i - 1];
-				values[i++] = Cell.check(cell.getIn(), day);
+				values[i++] = Cell.check(cell.getOut(), day);
 				totout += values[i - 1];
 			}
 	    	values[i++] = totin;

@@ -11,10 +11,18 @@ import java.util.regex.Pattern;
 
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
+import weka.core.converters.CSVSaver;
 
 public class ConfigUtil {
     public static void writeArff(Instances instances, String filename) throws IOException {
 	ArffSaver saver = new ArffSaver();
+	saver.setInstances(instances);
+	saver.setFile(new File(filename));
+	saver.writeBatch();
+    }
+    
+    public static void writeCSV(Instances instances, String filename) throws IOException {
+	CSVSaver saver = new CSVSaver();
 	saver.setInstances(instances);
 	saver.setFile(new File(filename));
 	saver.writeBatch();

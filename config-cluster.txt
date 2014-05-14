@@ -1,5 +1,5 @@
 input = data/preprocess.arff
-numClusters = 3
+numClusters = 4
 ignoredAttributes = cell_id, p1_latitude, p1_longitude, p2_latitude, p2_longitude, tot-in, tot-out, tot
-arffSimpleKMeans = data/simpleKMeans.arff
-arffHierarchical = data/hierarchical.arff
+outputArff = data/clusteredInstances.arff
+outputCSV = data/clusteredInstances.csv
