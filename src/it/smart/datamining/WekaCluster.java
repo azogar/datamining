@@ -39,9 +39,11 @@ public class WekaCluster {
 	    final int numClusters = Integer.parseInt(options.get("numClusters")[0]);
 	    final String inputFile = options.get("input")[0];
 	    final String[] ignoredAttributes = options.get("ignoredAttributes");
+	    final String[] latLongAttributes = options.get("latLong");
 	    
 	    // Read input dataset
-	    Instances data = DataSource.read(inputFile);
+	    Instances originalData = DataSource.read(inputFile);
+	    Instances data = new Instances(originalData);
 	    int numInstances = data.numInstances();
 
 	    // Filter to remove unwanted attributes from the dataset
@@ -131,25 +133,30 @@ public class WekaCluster {
 	    System.out.println("#################################\n");
 	    
 	    // Create Instances with assigned clusters, for each clusterer
-	    Instances clusteredInstances = new Instances(data);
+//	    Instances clusteredInstances = new Instances(data);
 	    double[] cosineSimpleKMeansAssignments = evalCosineSimpleKMeans.getClusterAssignments();
 	    double[] euclideanSimpleKMeansAssignments = evalEuclideanSimpleKMeans.getClusterAssignments();
 	    double[] cosineHierarchicalAssignments = evalCosineHierarchical.getClusterAssignments();
 	    double[] euclideanHierarchicalAssignments = evalEuclideanHierarchical.getClusterAssignments();
-	    clusteredInstances.insertAttributeAt(new Attribute("cosineSimpleKMeans"), 0);
-	    clusteredInstances.insertAttributeAt(new Attribute("euclideanSimpleKMeans"), 1);
-	    clusteredInstances.insertAttributeAt(new Attribute("cosineHierarchical"), 2);
-	    clusteredInstances.insertAttributeAt(new Attribute("euclideanHierarchical"), 3);
+	    originalData.insertAttributeAt(new Attribute("cosineSimpleKMeans"), 0);
+	    originalData.insertAttributeAt(new Attribute("euclideanSimpleKMeans"), 1);
+	    originalData.insertAttributeAt(new Attribute("cosineHierarchical"), 2);
+	    originalData.insertAttributeAt(new Attribute("euclideanHierarchical"), 3);
 	    for(int i = 0; i < numInstances; i++) {
-		Instance currentInstance = clusteredInstances.instance(i);
+		Instance currentInstance = originalData.instance(i);
 		currentInstance.setValue(0, cosineSimpleKMeansAssignments[i]);
 		currentInstance.setValue(1, euclideanSimpleKMeansAssignments[i]);
 		currentInstance.setValue(2, cosineHierarchicalAssignments[i]);
 		currentInstance.setValue(3, euclideanHierarchicalAssignments[i]);
 	    }
+	    
+	    
+//	    System.out.println(clusteredInstances.attribute(0).name());
+	    originalData.renameAttribute(originalData.attribute(latLongAttributes[0]), "latitude");
+	    originalData.renameAttribute(originalData.attribute(latLongAttributes[1]), "longitude");
 
-	    ConfigUtil.writeArff(clusteredInstances, options.get("outputArff")[0]);
-	    ConfigUtil.writeCSV(clusteredInstances, options.get("outputCSV")[0]);
+	    ConfigUtil.writeArff(originalData, options.get("outputArff")[0]);
+	    ConfigUtil.writeCSV(originalData, options.get("outputCSV")[0]);
 	    
 	} catch (Exception e) {
 	    e.printStackTrace();

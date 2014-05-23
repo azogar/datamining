@@ -22,14 +22,14 @@ import weka.filters.unsupervised.instance.SubsetByExpression;
 /**
  * Classe principale del progetto.
  * 
- * @author Luca Pardini
+ * @author Luca Pardini, Ivan Belluco
  *
  */
 public class DataMining {
     
     private static String CONFIG_FILE_NAME = "config-pre.txt";
 
-    public static Instances[] createInstances(double[] cellSize, int[] indexes, String[] fileNames, String[] headerRegex, DateFormat format) {
+    public static Instances[] createInstances(int[] indexes, String[] fileNames, String[] headerRegex) {
 	
 	Instances[] instances = new Instances[2];
 	int latIdx = -1, longIdx = -1, dateIdx = -1, numCSVAttributes = -1;
@@ -147,8 +147,11 @@ public class DataMining {
     }
 	
     public static Grid createGrid(double[] cellSize, Instances[] data, int[] indexes, DateFormat dateFormat) {
-	Grid grid = new Grid(cellSize[0], cellSize[1]);
 	int latIdx = indexes[0], longIdx = indexes[1], dateIdx = indexes[2];
+	double latDim = cellSize[1] * 0.00001d; // 0.00001d is the latitude equivalent of 1 m
+	// 0.00001d * Math.cos(Math.toRadians(data[0].meanOrMode(latIdx))) is how many longitude degrees is 1 m in the area considered
+	double longDim = cellSize[0] * 0.00001d * Math.cos(Math.toRadians(data[0].meanOrMode(latIdx)));
+	Grid grid = new Grid(longDim, latDim);
 	DateFormat originalDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 	boolean getIn = true;
 	
@@ -211,15 +214,6 @@ public class DataMining {
 	    }
 	}
 	
-//	Normalize filter = null;
-//	try {
-//	    filter = new Normalize();
-//	    filter.setInputFormat(instances);
-//	    return Filter.useFilter(instances, filter);
-//	} catch(Exception e) {
-//	    e.printStackTrace();
-//	}
-	
 	return instances;
     }
 	
@@ -237,7 +231,7 @@ public class DataMining {
 	    System.exit(1);
 	}
 
-	Instances[] inputData = createInstances(cellSize, indexes, inOutFiles, headerRegex, format);
+	Instances[] inputData = createInstances(indexes, inOutFiles, headerRegex);
 	
 	Point[] regionCorners = new Point[] {
 		new Point(Double.parseDouble(corners[0]), Double.parseDouble(corners[1])),
@@ -250,10 +244,10 @@ public class DataMining {
 	
 	Instances input = grid.getInstances();
 	
-	input = removeConstantFeatures(input);
+//	input = removeConstantFeatures(input);
 	input = normalize(input);
 
-	// grid.removeCellsLess(2);
+//	grid.removeCellsLess(2);
 
 	try {
 	    ConfigUtil.writeArff(input, options.get("outputArff")[0]);

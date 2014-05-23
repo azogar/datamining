@@ -14,24 +14,24 @@ import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVSaver;
 
 public class ConfigUtil {
-    public static void writeArff(Instances instances, String filename) throws IOException {
+    public static void writeArff(Instances instances, String pathName) throws IOException {
 	ArffSaver saver = new ArffSaver();
 	saver.setInstances(instances);
-	saver.setFile(new File(filename));
+	saver.setFile(new File(pathName));
 	saver.writeBatch();
     }
     
-    public static void writeCSV(Instances instances, String filename) throws IOException {
+    public static void writeCSV(Instances instances, String pathName) throws IOException {
 	CSVSaver saver = new CSVSaver();
 	saver.setInstances(instances);
-	saver.setFile(new File(filename));
+	saver.setFile(new File(pathName));
 	saver.writeBatch();
     }
     
-    public static Map<String, String[]> getOptionValues(String separator, String configFile) {
+    public static Map<String, String[]> getOptionValues(String separator, String pathName) {
 	Map<String, String[]> values = new HashMap<String, String[]>();
 	try {
-	    BufferedReader reader = new BufferedReader(new FileReader(new File(configFile)));
+	    BufferedReader reader = new BufferedReader(new FileReader(new File(pathName)));
 	    String line = new String();
 	    
 	    Pattern pattern = Pattern.compile("(\\w*)\\s*=\\s*(.*)");
