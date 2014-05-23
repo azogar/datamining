@@ -148,9 +148,9 @@ public class DataMining {
 	
     public static Grid createGrid(double[] cellSize, Instances[] data, int[] indexes, DateFormat dateFormat) {
 	int latIdx = indexes[0], longIdx = indexes[1], dateIdx = indexes[2];
-	double latDim = cellSize[1] * 0.00001d; // 0.00001d is the latitude equivalent of 1 m
-	// 0.00001d * Math.cos(Math.toRadians(data[0].meanOrMode(latIdx))) is how many longitude degrees is 1 m in the area considered
-	double longDim = cellSize[0] * 0.00001d * Math.cos(Math.toRadians(data[0].meanOrMode(latIdx)));
+	double latDim = cellSize[1] * 0.000009d; // 0.000009d is the latitude equivalent of 1 m
+	// 0.000009d * Math.cos(Math.toRadians(data[0].meanOrMode(latIdx))) is how many longitude degrees is 1 m in the area considered
+	double longDim = cellSize[0] * 0.000009d * Math.cos(Math.toRadians(data[0].meanOrMode(latIdx)));
 	Grid grid = new Grid(longDim, latDim);
 	DateFormat originalDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 	boolean getIn = true;
