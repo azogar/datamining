@@ -131,7 +131,7 @@ public class Grid {
 	    	values[i++] = totout;
 	    	values[i++] = totin + totout;
 	    
-	    	data.add(new Instance(1.0, values));
+	    	data.add(new Instance(1.0d, values));
 	    }		
 	    
 	    return data;

@@ -26,7 +26,7 @@ public class WekaCluster {
 	    filter.setFind(attributeName);
 	    filter.setReplace(newAttributeName);
 	    filter.setInputFormat(instances);
-	    instances = Filter.useFilter(instances, filter);	
+	    instances = Filter.useFilter(instances, filter);
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

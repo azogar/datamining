@@ -13,7 +13,6 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Normalize;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.RemoveUseless;
 import weka.filters.unsupervised.instance.RemoveDuplicates;
@@ -57,12 +56,12 @@ public class DataMining {
 		    	indexes[2] = i;
 		    }
 		}
-
+		
 		if (latIdx == -1 || longIdx == -1 || dateIdx == -1) {
 		    System.err.println("Latitude, Longitude or date not found!");
 		    System.exit(1);
 		}
-		
+
 		csvLoader.setDateFormat("yyyy-MM-dd");
 		csvLoader.setDateAttributes(String.valueOf(dateIdx));
 		
@@ -191,14 +190,35 @@ public class DataMining {
     }
     
     public static Instances normalize(Instances instances) {
-	Normalize filter = null;
-	try {
-	    filter = new Normalize();
-	    filter.setInputFormat(instances);
-	    return Filter.useFilter(instances, filter);
-	} catch(Exception e) {
-	    e.printStackTrace();
+	int startToNormalize = 5;
+	int endToNormalize = instances.numAttributes() - 3;
+	int numAttributesToNormalize = endToNormalize - startToNormalize;
+	int numInstances = instances.numInstances();
+	double mean;
+	
+	for(int i = 0; i < numInstances; i++) {
+	    mean = 0;
+	    Instance currentInstance = instances.instance(i);
+	    
+	    for(int j = startToNormalize; j < endToNormalize; j++) {
+		mean += currentInstance.value(j);
+	    }
+	    
+	    mean /= numAttributesToNormalize;
+
+	    for(int j = startToNormalize; j < endToNormalize; j++) {
+		currentInstance.setValue(j, currentInstance.value(j) - mean);
+	    }
 	}
+	
+//	Normalize filter = null;
+//	try {
+//	    filter = new Normalize();
+//	    filter.setInputFormat(instances);
+//	    return Filter.useFilter(instances, filter);
+//	} catch(Exception e) {
+//	    e.printStackTrace();
+//	}
 	
 	return instances;
     }
@@ -232,7 +252,6 @@ public class DataMining {
 	
 	input = removeConstantFeatures(input);
 	input = normalize(input);
-	// TODO: normalization should NOT normalize longitude, latitude, cell_id 
 
 	// grid.removeCellsLess(2);
 
@@ -242,8 +261,9 @@ public class DataMining {
 	    e.printStackTrace();
 	}
 
-	System.out.println(String.valueOf(grid));
-	System.out.println("Number of cells: " + grid.getCells().size());
+//	System.out.println(String.valueOf(grid));
+	System.out.println("Number of cells: " + input.numInstances());
+	System.out.println("Number of attributes: " + input.numAttributes());
     }
 
 }
