@@ -244,7 +244,8 @@ public class DataMining {
 	
 	Instances input = grid.getInstances();
 	
-//	input = removeConstantFeatures(input);
+	// Gli attributi rimossi potrebbero rendere la somma inconsistente
+	// input = removeConstantFeatures(input);
 	input = normalize(input);
 
 //	grid.removeCellsLess(2);

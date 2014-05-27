@@ -1,6 +1,6 @@
 input = data/preprocess.arff
-numClusters = 4
+numClusters = 3
 ignoredAttributes = cell_id, p1_latitude, p1_longitude, p2_latitude, p2_longitude, tot-in, tot-out, tot
 outputArff = data/clusteredInstances.arff
 outputCSV = data/clusteredInstances.csv
-latLong = p1_latitude, p1_longitude
+latLong = p1_latitude, p1_longitude, p2_latitude, p2_longitude

@@ -132,8 +132,8 @@ public class WekaCluster {
 	    
 	    System.out.println("#################################\n");
 	    
-	    // Create Instances with assigned clusters, for each clusterer
-//	    Instances clusteredInstances = new Instances(data);
+	    // Assign clusters to the instances, for each clusterer
+	    // Also, use only a pair (latitude, longitude) to identify the center of the cell
 	    double[] cosineSimpleKMeansAssignments = evalCosineSimpleKMeans.getClusterAssignments();
 	    double[] euclideanSimpleKMeansAssignments = evalEuclideanSimpleKMeans.getClusterAssignments();
 	    double[] cosineHierarchicalAssignments = evalCosineHierarchical.getClusterAssignments();
@@ -142,18 +142,31 @@ public class WekaCluster {
 	    originalData.insertAttributeAt(new Attribute("euclideanSimpleKMeans"), 1);
 	    originalData.insertAttributeAt(new Attribute("cosineHierarchical"), 2);
 	    originalData.insertAttributeAt(new Attribute("euclideanHierarchical"), 3);
+	    
+	    Attribute latMin = originalData.attribute(latLongAttributes[0]);
+	    Attribute longMin = originalData.attribute(latLongAttributes[1]);
+	    Attribute latMax = originalData.attribute(latLongAttributes[2]);
+	    Attribute longMax = originalData.attribute(latLongAttributes[3]);
+	    
 	    for(int i = 0; i < numInstances; i++) {
+		// Classes...
 		Instance currentInstance = originalData.instance(i);
 		currentInstance.setValue(0, cosineSimpleKMeansAssignments[i]);
 		currentInstance.setValue(1, euclideanSimpleKMeansAssignments[i]);
 		currentInstance.setValue(2, cosineHierarchicalAssignments[i]);
 		currentInstance.setValue(3, euclideanHierarchicalAssignments[i]);
+		
+		// ... coordinates
+		currentInstance.setValue(latMin, (currentInstance.value(latMin) + currentInstance.value(latMax))/2);
+		currentInstance.setValue(longMin, (currentInstance.value(longMin) + currentInstance.value(longMax))/2);
 	    }
 	    
-	    
-//	    System.out.println(clusteredInstances.attribute(0).name());
-	    originalData.renameAttribute(originalData.attribute(latLongAttributes[0]), "latitude");
-	    originalData.renameAttribute(originalData.attribute(latLongAttributes[1]), "longitude");
+	    originalData.renameAttribute(latMin, "latitude");
+	    originalData.renameAttribute(longMin, "longitude");
+	    originalData.deleteAttributeAt(latMax.index());
+	    // Find the new index of the longMax attribute after this deletion
+	    longMax = originalData.attribute(latLongAttributes[3]);
+	    originalData.deleteAttributeAt(longMax.index());
 
 	    ConfigUtil.writeArff(originalData, options.get("outputArff")[0]);
 	    ConfigUtil.writeCSV(originalData, options.get("outputCSV")[0]);
