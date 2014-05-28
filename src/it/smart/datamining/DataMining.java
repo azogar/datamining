@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -195,22 +197,35 @@ public class DataMining {
     public static Instances normalize(Instances instances) {
 	int startToNormalize = 5;
 	int endToNormalize = instances.numAttributes() - 3;
-	int numAttributesToNormalize = endToNormalize - startToNormalize;
 	int numInstances = instances.numInstances();
-	double mean;
+	double meanIn, meanOut;
+	List<Integer> inAttributes = new ArrayList<Integer>(), outAttributes = new ArrayList<Integer>();
+	
+	for(int i = startToNormalize; i < endToNormalize; i++) {
+	    if(instances.instance(0).attribute(i).name().matches("^in-.*")) inAttributes.add(i);
+	    else outAttributes.add(i);
+	}
 	
 	for(int i = 0; i < numInstances; i++) {
-	    mean = 0;
+	    meanIn = 0;
+	    meanOut = 0;
 	    Instance currentInstance = instances.instance(i);
 	    
-	    for(int j = startToNormalize; j < endToNormalize; j++) {
-		mean += currentInstance.value(j);
+	    for(Integer j : inAttributes) {
+		meanIn += currentInstance.value(j);
+	    }
+	    for(Integer j : outAttributes) {
+		meanOut += currentInstance.value(j);
 	    }
 	    
-	    mean /= numAttributesToNormalize;
-
-	    for(int j = startToNormalize; j < endToNormalize; j++) {
-		currentInstance.setValue(j, currentInstance.value(j) - mean);
+	    meanIn /= inAttributes.size();
+	    meanOut /= outAttributes.size();
+	    
+	    for(Integer j : inAttributes) {
+		currentInstance.setValue(j, currentInstance.value(j) - meanIn);
+	    }
+	    for(Integer j : outAttributes) {
+		currentInstance.setValue(j, currentInstance.value(j) - meanOut);
 	    }
 	}
 	
